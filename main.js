@@ -1,3 +1,6 @@
+import {CSS3DObject} from "./CSS3DRenderer.js"
+
+
 const THREE = window.MINDAR.IMAGE.THREE
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -9,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
             imageTargetSrc: "./ARPGMan.mind"
         })
     
-        const {scene, camera, renderer} = mindarThree
+        const {scene, camera, renderer, cssScene, cssRenderer} = mindarThree
 
         const textureLoader = new THREE.TextureLoader()
         const texture = await textureLoader.load("./40yo.png")
@@ -27,10 +30,28 @@ document.addEventListener("DOMContentLoaded", () => {
         const anchor = mindarThree.addAnchor(0)
         anchor.group.add(plane)
 
+        const obj = new CSS3DObject(document.querySelector("#ar-div"))
+
+        const cssAnchor = mindarThree.addCSSAnchor(0)
+        cssAnchor.group.add(obj)
+
+
+        // In your main.js, find the first image element
+        const arImage = document.getElementById("ar-image");
+        arImage.classList.add("fade-in");
+
+
         await mindarThree.start()
 
         renderer.setAnimationLoop(() => {
             renderer.render(scene,camera)
+            cssRenderer.render(cssScene, camera)
+
+            // if (!arImage.classList.contains("faded")) {
+            //     setTimeout(() => {
+            //       arImage.classList.add("faded"); // Faded class adds "fade-in" to avoid redundant animation
+            //     }, 500); // Adjust delay as needed
+            //   }
         })
     
     }
