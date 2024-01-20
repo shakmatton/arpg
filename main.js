@@ -18,9 +18,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1)
         scene.add(light)
 
+        
+
+        /*   >>>>>>>   COUNTRYBALL  <<<<<<   */
+
+        
+
         const cb = await loadGLTF("./Countryball/Countryball.gltf")
 
-        cb.scene.scale.set(0.085, 0.085, 0.085)
+        cb.scene.scale.set(0.07, 0.07, 0.07)
         cb.scene.position.set(-0.38, -0.33, 0)
         // cb.scene.rotation.set(0, 9.5, 0)
 
@@ -30,6 +36,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const cbMixer = new THREE.AnimationMixer(cb.scene)
         const cbAction = cbMixer.clipAction(cb.animations[0])   
         cbAction.play()
+
+
+
+        /*   >>>>>>>   AR IMAGE  <<<<<<   */
+
+
 
         const textureLoader = new THREE.TextureLoader()
         const texture = await textureLoader.load("./40yo.png")
@@ -47,6 +59,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const anchor = mindarThree.addAnchor(0)
         anchor.group.add(plane)
 
+
+
+        /*   >>>>>>>   CSS FOOTNOTE  <<<<<<   */
+
+
+
         const obj = new CSS3DObject(document.querySelector("#ar-div"))
 
         const cssAnchor = mindarThree.addCSSAnchor(0)
@@ -54,8 +72,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         // In your main.js, find the first image element
-        const arImage = document.getElementById("ar-image");
-        arImage.classList.add("fade-in");
+        // const arImage = document.getElementById("ar-image");
+        // arImage.classList.add("fade-in");
+
+
+        
+        /*   >>>>>>>   CLOCKS & RENDERS  <<<<<<   */
+
 
         
         const clock = new THREE.Clock()
@@ -64,9 +87,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
         renderer.setAnimationLoop(() => {
 
-            const delta = clock.getDelta()
-
+            const delta = clock.getDelta()                      // delta -> Countryball original blender animation
             cbMixer.update(delta)
+
+            const elapsedTime = clock.getElapsedTime()          // elapsedtime -> Countryball angular three.js animation
+            const cbAngle = elapsedTime * 0.2            
+            
+            cb.scene.position.x = Math.cos(cbAngle) * 0.4
+            cb.scene.position.y = Math.sin(cbAngle) * 0.4
+            
+            /*
+            const ghost1Angle = elapsedTime * 0.5               // fixed radius
+
+            ghost1.position.x = Math.cos(ghost1Angle) * 4
+            ghost1.position.z = Math.sin(ghost1Angle) * 4
+            ghost1.position.y = Math.sin(elapsedTime * 3)
+
+            */ 
 
             renderer.render(scene,camera)
             cssRenderer.render(cssScene, camera)
@@ -83,8 +120,3 @@ document.addEventListener("DOMContentLoaded", () => {
     start()
     
 })
-
-
-
-
-
