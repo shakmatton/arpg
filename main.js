@@ -61,29 +61,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-        /*   >>>>>>>   CSS FOOTNOTE  <<<<<<   */
+        /*   >>>>>>>   CSS DIVs  <<<<<<   */
 
 
 
-        const obj = new CSS3DObject(document.querySelector("#ar-div"))
+        const footnote = new CSS3DObject(document.querySelector("#ar-footnote"))
 
-        const cssAnchor = mindarThree.addCSSAnchor(0)
-        cssAnchor.group.add(obj)
+        const footnoteAnchor = mindarThree.addCSSAnchor(0)
+        footnoteAnchor.group.add(footnote)
 
+
+        const headingARG = new CSS3DObject(document.querySelector("#ar-heading-arg"))
+        const headingUSA = new CSS3DObject(document.querySelector("#ar-heading-usa"))
+
+        const headingARGAnchor = mindarThree.addCSSAnchor(0)
+        const headingUSAAnchor = mindarThree.addCSSAnchor(0)
+
+        headingARGAnchor.group.add(headingARG)
+        headingUSAAnchor.group.add(headingUSA)
+
+        
 
         // In your main.js, find the first image element
         // const arImage = document.getElementById("ar-image");
         // arImage.classList.add("fade-in");
 
 
-        
+               
         /*   >>>>>>>   CLOCKS & RENDERS  <<<<<<   */
 
-
         
+        let cbRotation = 0;                            // Initial rotation
+
+        document.body.addEventListener("pointerdown", () => {
+            cbRotation += Math.PI; // Rotate 180 degrees
+            cb.scene.rotation.y = cbRotation;
+          });
+
+
         const clock = new THREE.Clock()
 
         await mindarThree.start()
+
+
 
         renderer.setAnimationLoop(() => {
 
@@ -105,6 +125,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
             */ 
 
+            cb.scene.rotation.y = cbRotation            
+            
+            const angleThreshold = Math.PI;                 // Threshold for switching flags
+            const isArgentinaFlagVisible = cbRotation < angleThreshold;
+    
+            headingARG.element.style.visibility = isArgentinaFlagVisible ? "visible" : "hidden";
+            headingUSA.element.style.visibility = !isArgentinaFlagVisible ? "visible" : "hidden";
+
+
+
             renderer.render(scene,camera)
             cssRenderer.render(cssScene, camera)
 
@@ -113,6 +143,14 @@ document.addEventListener("DOMContentLoaded", () => {
             //       arImage.classList.add("faded"); // Faded class adds "fade-in" to avoid redundant animation
             //     }, 500); // Adjust delay as needed
             //   }
+
+
+            // mindarThree.on("end", () => {
+            //     headingARG.element.style.visibility = "hidden";
+            //     headingUSA.element.style.visibility = "hidden";
+            //     // ... other cleanup
+            //   });
+
         })
     
     }
