@@ -29,6 +29,10 @@ document.addEventListener("DOMContentLoaded", () => {
         cb.scene.scale.set(0.07, 0.07, 0.07)
         cb.scene.position.set(-0.38, -0.33, 0)
         // cb.scene.rotation.set(0, 9.5, 0)
+        
+
+        cb.scene.userData.clickable = true;          // We'll do this to all models which we want to capture an event (like the event 'click', further below).
+
 
         const cbAnchor = mindarThree.addAnchor(0)
         cbAnchor.group.add(cb.scene)
@@ -91,12 +95,42 @@ document.addEventListener("DOMContentLoaded", () => {
         /*   >>>>>>>   CLOCKS & RENDERS  <<<<<<   */
 
         
-        let cbRotation = 0;                            // Initial rotation
+        let cbRotation = 0;                                      // Initial rotation
 
-        document.body.addEventListener("pointerdown", () => {
-            cbRotation += Math.PI; // Rotate 180 degrees
-            cb.scene.rotation.y = cbRotation;
-          });
+
+
+
+
+        document.body.addEventListener("pointerdown", (e) => {
+            
+            const mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+            const mouseY = -1 * ((e.clientY / window.innerHeight) * 2 - 1);  
+            const mouse = new THREE.Vector2(mouseX, mouseY);
+
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+
+            const intersects = raycaster.intersectObjects(scene.children, true);
+
+            if (intersects.length > 0) { 
+                let o = intersects[0].object         
+                
+                while (o.parent && !o.userData.clickable) {   
+                    o = o.parent;                              
+                }
+            
+                if (o.userData.clickable) {                  
+                    if (o === cb.scene) {                 
+                        cbRotation += Math.PI;                               // Rotate 180 degrees
+                        cb.scene.rotation.y = cbRotation;                            
+                    }
+                }
+            }
+        });
+
+
+
+
 
 
         const clock = new THREE.Clock()
