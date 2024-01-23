@@ -48,20 +48,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         const textureLoader = new THREE.TextureLoader()
-        const texture = await textureLoader.load("./40yo.png")
+        const texture40 = await textureLoader.load("./40yo.png")
+        const texture35 = await textureLoader.load("./35yo.png")
     
-        const geometry = new THREE.PlaneGeometry(1, 1)
+        const geometry40 = new THREE.PlaneGeometry(1, 1)
+        const geometry35 = new THREE.PlaneGeometry(1, 1)
 
-        const material = new THREE.MeshBasicMaterial({
-            map: texture,
-            //transparent: true,
-            //opacity: 0.85
+        const material40 = new THREE.MeshBasicMaterial({
+            map: texture40, // transparent: true, opacity: 0.85
         })
 
-        const plane = new THREE.Mesh(geometry, material)
+        const material35 = new THREE.MeshBasicMaterial({
+            map: texture35, // transparent: true, opacity: 0.85
+        })
 
-        const anchor = mindarThree.addAnchor(0)
-        anchor.group.add(plane)
+        const plane40 = new THREE.Mesh(geometry40, material40)           // the 40yo guy
+        const plane35 = new THREE.Mesh(geometry35, material35)           // the 35yo guy
+
+        const ARPGAnchor = mindarThree.addAnchor(0)
+        ARPGAnchor.group.add(plane40)
+        ARPGAnchor.group.add(plane35)
+
+
+        plane40.position.z = 0.00005      // 40yo guy is positioned a little bit ahead in front of 35yo guy (to avoid Z-Fighting).
+        plane35.rotation.y = Math.PI      // 35yo guy starts backfacing the camera, back to back with the 40yo guy (which, in turn, is already facing the camera).
 
 
 
@@ -94,18 +104,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 */
 
-
         // In your main.js, find the first image element
         // const arImage = document.getElementById("ar-image");
         // arImage.classList.add("fade-in");
 
 
                
-        /*   >>>>>>>   CLOCKS & RENDERS  <<<<<<   */
+        /*   >>>>>>>   CLICK EVENT HANDLER  <<<<<<   */
+
 
         
         let cbRotation = 0                                      // Initial countryball rotation
         let cbTurn = 0                                          // Counter will assist CSS flags switching
+        let planeTurn = 0                                       // A turn counter for 40yo and 30yo guys
 
 
         document.body.addEventListener("pointerdown", (e) => {
@@ -137,6 +148,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
 
+
+        /*   >>>>>>>   CLOCKS & RENDERS  <<<<<<   */
+
+
+
         const clock = new THREE.Clock()
 
         await mindarThree.start()
@@ -152,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             cb.scene.position.x = Math.cos(cbAngle) * 0.4
             cb.scene.position.y = Math.sin(cbAngle) * 0.4
-            
+
             /* const ghost1Angle = elapsedTime * 0.5               // fixed radius
                ghost1.position.x = Math.cos(ghost1Angle) * 4    ghost1.position.z = Math.sin(ghost1Angle) * 4       ghost1.position.y = Math.sin(elapsedTime * 3)    */ 
 
@@ -164,11 +180,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 headingUSA.element.style.visibility = "hidden";    
                 headingUSA.position.y = 99999;                      // this solves the z-buffer conflict between both css elements
                 headingARG.position.y = 0;                          // when a css position is set to 0, it is displayed normally on screen.
-            } else {
+                               
+            } 
+            else {
                 headingUSA.element.style.visibility = "visible";   
                 headingARG.element.style.visibility = "hidden";     
                 headingARG.position.y = 99999;                      // when a css position is set to 99999, it is displayed far away (up and out of the camera display range). 
-                headingUSA.position.y = 0;     
+                headingUSA.position.y = 0;    
+                 
+            }
+
+                                                                     // if Countryball rotates, both guys planes must rotate too. So, cbTurn and planeTurn must be equal.
+            if (cbTurn !== planeTurn) {                              // If cbTurn and planeTurn are NOT equal:
+                plane40.rotation.y = plane40.rotation.y + Math.PI    // ...40yo guy now rotates 180 degrees, facing opposite side of 35yo guy
+                plane35.rotation.y = plane35.rotation.y + Math.PI    // ...35yo guy now rotates 180 degrees, facing opposite side of 40yo guy
+                planeTurn++                                          // planeTurn now follows the counter of the Countryball cbTurn. Now they are equal.
             }
 
 /*
@@ -179,6 +205,13 @@ document.addEventListener("DOMContentLoaded", () => {
             headingUSA.element.style.visibility = !isArgentinaFlagVisible ? "visible" : "hidden";
 
 */
+
+
+
+            // IDEA: TRY TO DRAW A BLANK SCREEN (BLACK, WHITE, WHATEVER...) IN THE CASE OF THE EVENT "TARGETLOST"...
+            
+            
+
 
             renderer.render(scene,camera)
             cssRenderer.render(cssScene, camera)
