@@ -4,6 +4,7 @@ import {loadGLTF} from "./loader.js"
 
 const THREE = window.MINDAR.IMAGE.THREE
 
+
 document.addEventListener("DOMContentLoaded", () => {
 
     const start = async() => {
@@ -15,11 +16,37 @@ document.addEventListener("DOMContentLoaded", () => {
     
         const {scene, camera, renderer, cssScene, cssRenderer} = mindarThree
 
-        const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1)
+        const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1)      // Hemisphere Light
+        
+        // The following value was needed for the countryball illumination (check the final renderer part for scene illumination)
+        light.intensity = 4.7                                                
+        
         scene.add(light)
 
         
 
+        /*   >>>>>>>   MUSIC BUTTON  <<<<<<   */
+
+        const mb = await loadGLTF("./MusicButton/Button5.gltf")       // Remember: mb = MusicButton 
+
+        mb.scene.scale.set(0.1, 0.1, 0.1)
+        mb.scene.rotation.x = Math.PI/2
+        mb.scene.position.set(-0.12, 0.62, 0)
+
+        const mbAnchor = mindarThree.addAnchor(0)
+        mbAnchor.group.add(mb.scene)
+
+        mb.scene.userData.clickable = true;          
+
+        const mbMixer = new THREE.AnimationMixer(mb.scene)
+                
+        const greenDownAction = mbMixer.clipAction(mb.animations[1])        // Green Button Down     
+        const greenUpAction = mbMixer.clipAction(mb.animations[2])          // Green Button Up        
+        const redDownAction = mbMixer.clipAction(mb.animations[3])          // Red Button Down       
+        const redUpAction = mbMixer.clipAction(mb.animations[4])            // Red Button Up 
+        
+        
+        
         /*   >>>>>>>   COUNTRYBALL  <<<<<<   */
 
         
@@ -43,35 +70,160 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-        /*   >>>>>>>   AR IMAGE  <<<<<<   */
+        /*   >>>>>>>   AR IMAGES  <<<<<<   */
 
 
 
         const textureLoader = new THREE.TextureLoader()
-        const texture40 = await textureLoader.load("./40yo.png")
-        const texture35 = await textureLoader.load("./35yo.png")
-    
-        const geometry40 = new THREE.PlaneGeometry(1, 1)
+        const texture35 = await textureLoader.load("./35yo.jpg")
+        const texture45 = await textureLoader.load("./45yo.jpg")
+        
+        const rrTexture1 = await textureLoader.load("./RR11b-e.png")         // Rick Roll texture 1
+        const rrTexture2 = await textureLoader.load("./RR11-e.png")          // Rick Roll texture 2
+           
         const geometry35 = new THREE.PlaneGeometry(1, 1)
+        const geometry45 = new THREE.PlaneGeometry(1, 1)
+        const rrGeometry = new THREE.PlaneGeometry(0.5, 378/1536)            // Rick Roll geometry  --> Original geomtry: (1, 378/768)
 
-        const material40 = new THREE.MeshBasicMaterial({
-            map: texture40, // transparent: true, opacity: 0.85
-        })
-
-        const material35 = new THREE.MeshBasicMaterial({
-            map: texture35, // transparent: true, opacity: 0.85
-        })
-
-        const plane40 = new THREE.Mesh(geometry40, material40)           // the 40yo guy
-        const plane35 = new THREE.Mesh(geometry35, material35)           // the 35yo guy
-
-        const ARPGAnchor = mindarThree.addAnchor(0)
-        ARPGAnchor.group.add(plane40)
-        ARPGAnchor.group.add(plane35)
+        const material35 = new THREE.MeshBasicMaterial({ map: texture35,     /* transparent: true, opacity: 0.85 */ })
+        const material45 = new THREE.MeshBasicMaterial({ map: texture45 })
+        
+        
+        
+        const rrMaterial1 = new THREE.MeshBasicMaterial({ map: rrTexture1 });
+        const rrMaterial2 = new THREE.MeshBasicMaterial({ map: rrTexture2 });
 
 
-        plane40.position.z = 0.00005      // 40yo guy is positioned a little bit ahead in front of 35yo guy (to avoid Z-Fighting).
-        plane35.rotation.y = Math.PI      // 35yo guy starts backfacing the camera, back to back with the 40yo guy (which, in turn, is already facing the camera).
+        const plane35 = new THREE.Mesh(geometry35, material35)               // the 35yo guy
+        const plane45 = new THREE.Mesh(geometry45, material45)               // the 45yo guy
+
+        const rickRoll1 = new THREE.Mesh(rrGeometry, rrMaterial1)              // Rick Roll plane
+        const rickRoll2 = new THREE.Mesh(rrGeometry, rrMaterial2)              // Rick Roll plane
+
+
+        const arpgAnchor = mindarThree.addAnchor(0)
+        // const rrAnchor = mindarThree.addAnchor(0)
+
+        arpgAnchor.group.add(plane35)
+        arpgAnchor.group.add(plane45)
+        
+        arpgAnchor.group.add(rickRoll1)
+        arpgAnchor.group.add(rickRoll2)
+
+        // rrAnchor.group.add(rickRoll)
+
+
+        plane35.position.z = 0.00005      // 45yo guy is positioned a little bit ahead in front of 35yo guy (to avoid Z-Fighting).
+        plane45.rotation.y = Math.PI      // 35yo guy starts backfacing the camera, back to back with the 40yo guy (which, in turn, is already facing the camera).
+
+        rickRoll1.position.y = 0.624      // RR1 plane positioning        
+        rickRoll1.position.x = 0.25
+        rickRoll1.position.z = 0.00005    // RR1 will start a little bit ahead in front of RR2 (to avoid Z-Fighting).
+
+        rickRoll2.position.y = 0.624      // RR2 plane positioning
+        rickRoll2.position.x = 0.25
+        rickRoll2.rotation.y = Math.PI    // RR2 starts backfacing the camera, back to back with RR1 (already facing the camera).
+
+
+        
+
+/*
+
+
+
+
+        const vimeo = new CSS3DObject(document.querySelector("#ar-vimeo"));
+        const vimeoAnchor = mindarThree.addCSSAnchor(0);
+        vimeoAnchor.group.add(vimeo);
+
+        vimeoAnchor.onTargetFound = () => {
+            vimeo.playVideo();                       // playVideo()
+        }
+        vimeoAnchor.onTargetLost = () => {
+            vimeo.pauseVideo();                      // pauseVideo() 
+        }
+
+
+// -------------------------------------------------------------------------------------------------------------------------
+
+
+// The loadVideo method will await for our Sintel video.
+const video = await loadVideo("./sintel.mp4")    
+
+// Creating a texture for our video:
+const texture = new THREE.VideoTexture(video)
+
+// Now, we create a plane for our video (using our new texture):
+
+const geometry = new THREE.PlaneGeometry(1, 204/480)                    // 1 unit of plane width === 1 unit of AR target scene width. 
+                                                                        // Width of 1 treats the plane as a square. But the video is not square shaped.
+                                                                        // So, we set height as 204/480 (to keep our aspect ratio). Now we have a perfect overlay.
+
+const material = new THREE.MeshBasicMaterial( {map:texture} )
+const plane = new THREE.Mesh(geometry, material)
+
+
+const anchor = mindarThree.addAnchor(0);
+
+anchor.group.add(plane)                       // Now we have the plane added to our anchor.
+
+anchor.onTargetFound = () => {                // Video plays when target is found.
+  video.play()
+}
+
+anchor.onTargetLost = () => {                 // Video pauses when target is lost.
+  video.pause()
+}
+
+video.addEventListener("play", () => {     //  The author captured the video frame in its 6th second, so he could use it a target image.      
+  video.currentTime = 6                    //  Whenever the video plays, it will begin on the 6th second. At this second, the still image will turn into a video.
+}) 
+
+
+
+*/
+
+
+
+
+        // function displaySentence (idiom) {
+        //     if (!sentences) { // Check if data is loaded
+        //       fetch("sentences.json")
+        //       .then(response => response.json())
+        //       .then(data => {
+        //         sentences = data;
+        //         initializeDisplay(); // Start displaying random sentences
+        //       })
+        //       .catch(error => {
+        //         console.error("Error fetching sentences:", error); // Handle error
+        //       })
+        //     }
+        // }
+
+
+       
+
+        
+
+        // function getRandomSentence(currentLanguage, sentences) {
+        //     const languageData = sentences[currentLanguage];
+        //     const randomIndex = Math.floor(Math.random() * languageData.length);
+        //     return languageData[randomIndex];
+        //   }
+
+          
+        //   document.getElementById("sentence-element").addEventListener("click", () => {
+        //     const currentLanguage = /* ... determine current language based on displayed content */;
+        //     const randomSentence = getRandomSentence(currentLanguage, sentences);
+            
+        //     // Update the displayed sentence content
+        //     document.getElementById("sentence-element").textContent = randomSentence;
+        //   });
+          
+        
+        
+
+
 
 
 
@@ -79,20 +231,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-        const footnote = new CSS3DObject(document.querySelector("#ar-footnote"))
+        // const guide = new CSS3DObject(document.querySelector("#ar-guide"))
         const headingARG = new CSS3DObject(document.querySelector("#ar-heading-arg"))
         const headingUSA = new CSS3DObject(document.querySelector("#ar-heading-usa"))
 
-        const footnoteAnchor = mindarThree.addCSSAnchor(0)
+        // const guideAnchor = mindarThree.addCSSAnchor(0)
         const headingARGAnchor = mindarThree.addCSSAnchor(0)
         const headingUSAAnchor = mindarThree.addCSSAnchor(0)
 
-        footnoteAnchor.group.add(footnote)
+        // guideAnchor.group.add(guide)
         headingARGAnchor.group.add(headingARG)
         headingUSAAnchor.group.add(headingUSA)
 
+ 
 
-        
+
 /*      onTargetFound usage example:
 
         anchor.onTargetFound = () => {
@@ -118,7 +271,13 @@ document.addEventListener("DOMContentLoaded", () => {
         let cbTurn = 0                                          // Counter will assist CSS flags switching
         let planeTurn = 0                                       // A turn counter for 40yo and 30yo guys
 
+        let greenUp = true                                      // The ON/Green button starts on top
 
+        greenDownAction.setLoop(THREE.LoopOnce)                 // Ensures this MusicButton animation action will loop just once.
+        greenUpAction.setLoop(THREE.LoopOnce)
+        redDownAction.setLoop(THREE.LoopOnce)
+        redUpAction.setLoop(THREE.LoopOnce)
+        
         document.body.addEventListener("pointerdown", (e) => {
             
             const mouseX = (e.clientX / window.innerWidth) * 2 - 1;
@@ -137,11 +296,53 @@ document.addEventListener("DOMContentLoaded", () => {
                     o = o.parent;                              
                 }
             
-                if (o.userData.clickable) {                  
+                if (o.userData.clickable) {     
+                                 
                     if (o === cb.scene) {                 
                         cbRotation += Math.PI;                               // Countryball must now rotate 180 degrees
                         cb.scene.rotation.y = cbRotation;                    // Executes 180 degrees rotation    
                         cbTurn++                                             // Updates number of countryball turns
+                    }
+                    
+                    
+                    if (o === mb.scene) {                                   // If the user clicked the MusicButton:
+
+                        /* Some other possible commands to use, if needed:
+                        
+                        if ( action !== null ) {
+                             action.stop();  action.play();  setTimeout(5000);  greenDownAction.play().reset();  redUpAction.paused();  
+                             greenDownAction.reset()               // Goes to animation frame 1                             
+                        // Search later for the method .setDuration, which sets the duration for a single loop of an action.     */
+
+
+                        if (greenUp) {                                    // If Green button is ON...
+
+                            greenDownAction.play()                        // Plays the animation 
+                            redUpAction.play()
+
+                            greenDownAction.clampWhenFinished = true      // Stops the animation in the last frame
+                            redUpAction.clampWhenFinished = true   
+
+                            redDownAction.stop()                          // Stops the animation 
+                            greenUpAction.stop()
+
+                            greenUp = false                               // Red button is ON and Green button is OFF.
+
+                        } 
+                        else {                                            // If Red button is ON... 
+
+                            greenUpAction.play()
+                            redDownAction.play()
+
+                            greenUpAction.clampWhenFinished = true  
+                            redDownAction.clampWhenFinished = true
+
+                            greenDownAction.stop()
+                            redUpAction.stop()
+
+                            greenUp = true                               // Green button is ON and Red button is OFF.
+
+                        }
                     }
                 }
             }
@@ -162,6 +363,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const delta = clock.getDelta()                      // delta -> Countryball original blender animation
             cbMixer.update(delta)
+
+            mbMixer.update(delta)
 
             const elapsedTime = clock.getElapsedTime()          // elapsedtime -> Countryball angular three.js animation
             const cbAngle = elapsedTime * 0.2            
@@ -192,8 +395,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                                                                      // if Countryball rotates, both guys planes must rotate too. So, cbTurn and planeTurn must be equal.
             if (cbTurn !== planeTurn) {                              // If cbTurn and planeTurn are NOT equal:
-                plane40.rotation.y = plane40.rotation.y + Math.PI    // ...40yo guy now rotates 180 degrees, facing opposite side of 35yo guy
-                plane35.rotation.y = plane35.rotation.y + Math.PI    // ...35yo guy now rotates 180 degrees, facing opposite side of 40yo guy
+                plane45.rotation.y = plane45.rotation.y + Math.PI    // ...45yo guy now rotates 180 degrees, facing opposite side of 35yo guy
+                plane35.rotation.y = plane35.rotation.y + Math.PI    // ...35yo guy now rotates 180 degrees, facing opposite side of 45yo guy
+
+                rickRoll1.rotation.y = rickRoll1.rotation.y + Math.PI    // The same goes for both RickRoll image planes...
+                rickRoll2.rotation.y = rickRoll2.rotation.y + Math.PI
+
                 planeTurn++                                          // planeTurn now follows the counter of the Countryball cbTurn. Now they are equal.
             }
 
@@ -206,13 +413,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 */
 
-
-
-            // IDEA: TRY TO DRAW A BLANK SCREEN (BLACK, WHITE, WHATEVER...) IN THE CASE OF THE EVENT "TARGETLOST"...
-            
-            
-
-
             renderer.render(scene,camera)
             cssRenderer.render(cssScene, camera)
 
@@ -220,7 +420,14 @@ document.addEventListener("DOMContentLoaded", () => {
             //     setTimeout(() => {
             //       arImage.classList.add("faded"); // Faded class adds "fade-in" to avoid redundant animation
             //     }, 500); // Adjust delay as needed
-            //   }            
+            //   }    
+
+            
+            // Render techniques for improving lightning:
+            renderer.outputEncoding = THREE.LinearEncoding;
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.physicallyCorrectLights = true; 
 
         })    
     }
