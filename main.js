@@ -1,5 +1,5 @@
 import {CSS3DObject} from "./CSS3DRenderer.js"
-import {loadGLTF} from "./loader.js" 
+import {loadAudio, loadGLTF} from "./loader.js" 
 
 
 const THREE = window.MINDAR.IMAGE.THREE
@@ -45,7 +45,23 @@ document.addEventListener("DOMContentLoaded", () => {
         const redDownAction = mbMixer.clipAction(mb.animations[3])          // Red Button Down       
         const redUpAction = mbMixer.clipAction(mb.animations[4])            // Red Button Up 
         
+
+        // Music Button Sound
+
+        const GreenButtonSoundClip = await loadAudio("./Macintosh Plus - 420 Floral Shoppe (Edit).mp3")
+        const listener = new THREE.AudioListener()
+        const audio = new THREE.PositionalAudio(listener) 
+
+        camera.add(listener)    
+
+        mbAnchor.group.add(audio)
+
+        audio.setRefDistance(400)
+        audio.setBuffer(GreenButtonSoundClip)
+        audio.setLoop(true)
+
         
+
         
         /*   >>>>>>>   COUNTRYBALL  <<<<<<   */
 
@@ -324,14 +340,17 @@ video.addEventListener("play", () => {     //  The author captured the video fra
                             redUpAction.clampWhenFinished = true   
 
                             redDownAction.stop()                          // Stops the animation 
-                            greenUpAction.stop()
+                            greenUpAction.stop()                           
+
+                            audio.play() 
 
                             greenUp = false                               // Red button is ON and Green button is OFF.
 
                         } 
                         else {                                            // If Red button is ON... 
 
-                            greenUpAction.play()
+                            //greenUpAction.setDuration(0.3).play()
+                            greenUpAction.play()                         
                             redDownAction.play()
 
                             greenUpAction.clampWhenFinished = true  
@@ -339,6 +358,8 @@ video.addEventListener("play", () => {     //  The author captured the video fra
 
                             greenDownAction.stop()
                             redUpAction.stop()
+                            
+                            audio.pause()
 
                             greenUp = true                               // Green button is ON and Red button is OFF.
 
@@ -403,6 +424,23 @@ video.addEventListener("play", () => {     //  The author captured the video fra
 
                 planeTurn++                                          // planeTurn now follows the counter of the Countryball cbTurn. Now they are equal.
             }
+
+
+
+            arpgAnchor.onTargetLost = () => {               // music button activated on red button AND target was lost
+                if (!greenUp) {
+                    audio.pause();
+                }
+            }
+            
+            arpgAnchor.onTargetFound = () => {              // music button activated on red button AND target was found
+                if (!greenUp) {
+                    audio.play();
+                }
+            }
+
+
+
 
 /*
             const angleThreshold = Math.PI;                 // Threshold for switching flags
